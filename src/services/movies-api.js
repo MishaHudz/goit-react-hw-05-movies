@@ -20,3 +20,24 @@ export async function getFilmDetailsById(filmId) {
 
   return data;
 }
+
+export async function getFilmCast(filmId) {
+  const { data } = await axios(`/movie/${filmId}/credits`, options);
+
+  return data;
+}
+
+export async function getFilmRevirws(filmId) {
+  const { data } = await axios(`/movie/${filmId}/reviews`, options);
+
+  return data;
+}
+
+export async function getFilmsBySearch(inputedSearchString) {
+  const { data } = await axios(
+    `/search/movie?query=${inputedSearchString}`,
+    options
+  );
+
+  return data;
+}

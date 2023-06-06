@@ -1,12 +1,20 @@
 import FilmDetailInfo from 'components/FilmDetailInfo/FilmDetailInfo';
-import { useEffect, useState } from 'react';
-import { NavLink, Outlet, useParams } from 'react-router-dom';
+import { Suspense, useEffect, useState } from 'react';
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { getFilmDetailsById } from 'services/movies-api';
+import {
+  AdditionalInfoContainer,
+  AdditionalInfoLink,
+  AdditionalInfoLinksList,
+  GoBackButton,
+} from './MovieDetails.styles';
 
 function MovieDetailsPage() {
   const [filmDetails, setFilmDetails] = useState(null);
 
   const { movieId } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (filmDetails) return;
@@ -19,18 +27,33 @@ function MovieDetailsPage() {
     getFilmDetails();
   });
 
+  const onGoBackButtonClick = () => {
+    navigate(location.state);
+  };
+
   return (
     <>
+      <GoBackButton onClick={onGoBackButtonClick}> &#x2190; </GoBackButton>
       <FilmDetailInfo filmDetails={filmDetails} />
-      <ul>
-        <li>
-          <NavLink to={'cast'}>Cast</NavLink>
-        </li>
-        <li>
-          <NavLink to={'reviews'}>Reviews</NavLink>
-        </li>
-      </ul>
-      <Outlet />
+      <AdditionalInfoContainer>
+        <p>Additional information</p>
+        <AdditionalInfoLinksList>
+          <li>
+            <AdditionalInfoLink to={'cast'} state={location.state}>
+              Cast
+            </AdditionalInfoLink>
+          </li>
+          <li>
+            <AdditionalInfoLink to={'reviews'} state={location.state}>
+              Reviews
+            </AdditionalInfoLink>
+          </li>
+        </AdditionalInfoLinksList>
+      </AdditionalInfoContainer>
+
+      <Suspense>
+        <Outlet />
+      </Suspense>
     </>
   );
 }
