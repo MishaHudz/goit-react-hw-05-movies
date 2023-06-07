@@ -1,52 +1,56 @@
+import { toast } from 'react-toastify';
 import MoviesList from 'components/MoviesList/MoviesList';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import { getFilmsBySearch } from 'services/movies-api';
 
 function MoviesPage() {
   const [request, setRequest] = useSearchParams();
   const [filmList, setFilmList] = useState(null);
-  const filmName = useMemo(() => request.get('search'), [request]);
+  const [inputState, setinputState] = useState('');
+  const [eror, setEror] = useState(null);
 
-  const onFormSubmit = evt => {
-    evt.preventDefault();
-    if (!request.get('search')) return toast.warn('Enter name of the film!');
-    getFilmsList();
-  };
+  const filmName = useMemo(() => request.get('search'), [request]);
 
   useEffect(() => {
     if (!filmName) return;
-
     const fetchFilms = async () => {
-      const { results } = await getFilmsBySearch(filmName);
-      setFilmList(results);
-      if (results.length === 0) toast.error('Not found');
+      try {
+        const { results } = await getFilmsBySearch(filmName);
+        setFilmList(results);
+        setinputState('');
+        setEror(null);
+        if (results.length === 0) {
+          throw new Error('Not Found');
+        }
+      } catch (error) {
+        setEror(error.message);
+      }
     };
     fetchFilms();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [filmName]);
 
-  const getFilmsList = async () => {
-    const { results } = await getFilmsBySearch(request.get('search'));
-    setFilmList(results);
-    if (results.length === 0) toast.error('Not found');
+  useEffect(() => {
+    eror && toast.error(eror);
+  }, [eror]);
+
+  const onFormSubmit = evt => {
+    evt.preventDefault();
+
+    if (!inputState) return toast.warn('Enter name of the film!');
+
+    const filmRequest = inputState !== '' ? { search: inputState } : {};
+    setRequest(filmRequest);
   };
 
   const updateQueryString = evt => {
-    const filmRequest =
-      evt.target.value !== '' ? { search: evt.target.value } : {};
-    setRequest(filmRequest);
+    setinputState(evt.target.value);
   };
 
   return (
     <>
       <form onSubmit={onFormSubmit}>
-        <input
-          type="text"
-          onChange={updateQueryString}
-          value={request.get('search') ?? ''}
-        />
+        <input type="text" onChange={updateQueryString} value={inputState} />
         <button>Search</button>
       </form>
       {filmList && <MoviesList moviesListArr={filmList} moviesPage={true} />}
